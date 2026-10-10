@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CPM Model Viewer</title>
+<meta name="description" content="View Custom Player Models (CPM) projects, exported models and skins with all of their animations.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;600&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app" id="app">
+	<header class="topbar">
+		<div class="brand"><canvas class="brand-mark" id="brandMark" width="8" height="8" aria-hidden="true"></canvas>CPM Viewer</div>
+		<div class="model-title"><strong id="mTitle">Loading example model…</strong><span id="mKind">Custom Player Models</span></div>
+		<div class="top-actions">
+			<button class="btn primary" id="openBtn" type="button">Open file</button>
+			<button class="btn" id="resetCamBtn" type="button">Reset camera</button>
+		</div>
+		<input type="file" id="fileInput" hidden accept=".cpmproject,.cpmmodel,.png,.txt,application/zip,image/png">
+	</header>
+
+	<main class="viewport" id="viewport" aria-label="3D model view">
+		<div class="vp-overlay">
+			<div class="hud">
+				<button class="btn small" id="playBtn" type="button" aria-label="Pause animations">Pause</button>
+				<label for="speed">Speed</label>
+				<input type="range" id="speed" min="0" max="3" step="0.05" value="1">
+				<output id="speedOut" class="pose-badge">1.00×</output>
+			</div>
+			<div class="hud"><label for="hudMove">Movement</label><select id="hudMove" class="hud-select"></select></div>
+			<div class="hud"><span class="pose-badge" id="poseBadge">STANDING</span></div>
+		</div>
+		<section class="dock" id="dock" aria-label="Model controls">
+			<div class="dock-h">
+				<button class="dock-toggle" id="dockToggle" type="button" aria-expanded="true" aria-controls="dockBody"><span class="caret" aria-hidden="true">▾</span><h2>Model controls</h2></button>
+				<small id="dockCount"></small>
+			</div>
+			<div class="dock-body" id="dockBody">
+				<p class="hint" id="ctrlHint">Gestures, poses, toggles and sliders from the model's gesture menu.</p>
+				<div class="ctrl-list" id="controls"></div>
+				<div class="dock-foot"><label class="hint"><input type="checkbox" id="showHidden"> show hidden</label><button class="btn small" id="resetParams" type="button">Reset</button></div>
+			</div>
+		</section>
+		<div class="drop-hint" id="dropHint" hidden>Drop to load</div>
+		<div class="busy notice" id="busy" hidden>Loading…</div>
+	</main>
+
+	<aside class="panel" id="panel">
+		<details class="sec fold" id="loadSec" open>
+			<summary class="sec-h"><h2><span class="caret" aria-hidden="true">▾</span>Load</h2><small id="loadSummary">project, model, skin or link</small></summary>
+			<div class="dropzone" id="dropzone" role="button" tabindex="0">
+				<b>Choose or drop a file</b>
+				<span>You can also paste an image or text anywhere.</span>
+				<span class="formats">.cpmproject · .cpmmodel · skin .png · base64 .txt</span>
+			</div>
+			<div class="link-row">
+				<input type="text" id="linkInput" placeholder="Gist / Pastebin / GitHub link or model string" aria-label="Link or model string">
+				<button class="btn" id="linkBtn" type="button">Load</button>
+			</div>
+			<div class="row two"><label for="skinType">Skin type</label>
+				<select id="skinType"><option value="">Automatic</option><option value="DEFAULT">Classic (4px arms)</option><option value="SLIM">Slim (3px arms)</option></select>
+			</div>
+			<div class="row two"><label for="baseSkin">Base skin</label>
+				<div class="link-row"><button class="btn small" id="baseSkinBtn" type="button">Use my skin…</button><button class="btn small" id="baseSkinReset" type="button">Default</button></div>
+			</div>
+			<input type="file" id="baseSkinInput" hidden accept="image/png">
+			<details>
+				<summary class="hint">Network options</summary>
+				<div class="row two" style="margin-top:8px"><label for="proxy">CORS proxy</label><input type="text" id="proxy" placeholder="e.g. https://corsproxy.io/?url={url}"></div>
+				<p class="hint">Gist and GitHub links download directly. Pastebin needs a proxy. When a download is blocked you can paste the data by hand.</p>
+			</details>
+			<div id="linkFix" hidden></div>
+			<div id="loadMsg" hidden></div>
+		</details>
+
+		<section class="sec" id="modelSec">
+			<div class="sec-h"><h2>Model</h2><small id="modelStats"></small></div>
+			<div class="model-head" id="modelHead" hidden><img id="modelIcon" alt=""><div><strong id="modelName"></strong><p class="hint" id="modelDesc"></p></div></div>
+			<dl class="meta" id="modelMeta"></dl>
+			<div id="warnings"></div>
+		</section>
+
+
+		<section class="sec">
+			<div class="sec-h"><h2>Movement</h2><small><span class="dot-legend">■</span> has custom animation</small></div>
+			<div class="chips" id="moveChips"></div>
+		</section>
+
+		<section class="sec">
+			<div class="sec-h"><h2>Hands</h2></div>
+			<div class="row two"><label for="rightHand">Right hand</label><select id="rightHand"></select></div>
+			<div class="row two"><label for="leftHand">Left hand</label><select id="leftHand"></select></div>
+		</section>
+
+		<section class="sec">
+			<div class="sec-h"><h2>Status</h2><small>armor, effects, states</small></div>
+			<div class="chips" id="statusChips"></div>
+		</section>
+
+		<section class="sec">
+			<div class="sec-h"><h2>Values</h2><small>value-driven animations</small></div>
+			<div id="valueRows" class="ctrl-list"></div>
+		</section>
+
+		<section class="sec">
+			<div class="sec-h"><h2>Now playing</h2><small id="playCount"></small></div>
+			<ul class="playing" id="playing"></ul>
+		</section>
+
+		<section class="sec">
+			<div class="sec-h"><h2>View</h2></div>
+			<div class="checks">
+				<label><input type="checkbox" id="optOuter" checked> Outer skin layer</label>
+				<label><input type="checkbox" id="optVanilla" checked> Vanilla body parts</label>
+				<label><input type="checkbox" id="optCape" checked> Cape</label>
+				<label><input type="checkbox" id="optFloor" checked> Floor grid</label>
+				<label><input type="checkbox" id="optSpin"> Turntable</label>
+				<label><input type="checkbox" id="optVanillaAnim" checked> Vanilla animation</label>
+			</div>
+			<p class="hint">Drag to orbit, right-drag or two fingers to pan, scroll or pinch to zoom. <kbd>Space</kbd> pauses.</p>
+			<div class="export-row">
+				<button class="btn small" id="exportBtn" type="button">Export as project</button>
+				<span class="hint">Save the loaded model as an editable .cpmproject.</span>
+			</div>
+			<div id="exportMsg" hidden></div>
+		</section>
+	</aside>
+</div>
+
+<!-- three.js r147 (last release that ships the non-module OrbitControls build) -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<!-- App scripts: plain scripts sharing one global scope, load order matters -->
+<script src="js/io.js"></script>
+<script src="js/assets.js"></script>
+<script src="js/model.js"></script>
+<script src="js/anim.js"></script>
+<script src="js/project.js"></script>
+<script src="js/vanilla.js"></script>
+<script src="js/load.js"></script>
+<script src="js/export.js"></script>
+<script src="js/render.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>

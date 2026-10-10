@@ -1,0 +1,12 @@
+{
+  "name": "cpm-viewer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browser viewer for Custom Player Models (CPM) projects, exported models and skins",
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node test/run.js",
+    "build:single": "node tools/build-single.mjs"
+  },
+  "license": "MIT"
+}
