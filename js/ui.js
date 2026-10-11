@@ -360,7 +360,7 @@
 		await new Promise(r => setTimeout(r, 30));
 		try {
 			const mode = $('glbMode').value;
-			let clips = [], opts = {};
+			let clips = [], opts = { rig: $('glbRig').value };
 			const cur = gltfClipCurrent(vs, driver, 'Current');
 			if (mode === 'still') opts.rest = Object.assign(cur, { time: Math.floor(clock) });
 			else if (mode === 'current') clips = [cur];

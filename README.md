@@ -14,8 +14,20 @@ It reads:
 Any loaded model can be saved back out with **Export as project**, or as a **GLB** (glTF binary)
 for Blender, game engines and other 3D tools. The GLB can hold the current frame, the current state
 as one looping clip, or one clip for every movement, pose, gesture, toggle and slider. Clips are
-baked at 20 frames per second from the same animation engine the viewer uses; parts that appear and
-disappear are animated through scale, since glTF has no visibility track.
+baked at 20 frames per second from the same animation engine the viewer uses.
+
+Two rigs are available for the GLB:
+
+- **Armature (bones)**, the default: one skeleton with a `Root` bone, a `Model` bone carrying the
+  whole-body movement (sleeping, swimming, elytra and so on), and one bone per body part and cube,
+  named after the part or the cube's name in the project. All geometry is merged into skinned
+  meshes (one per texture), each vertex weighted fully to its bone. The bind pose has no bone
+  scale, so the armature imports cleanly into Blender. Parts that never show in the exported clips
+  are left out.
+- **Object hierarchy**: the viewer's scene graph as plain nested objects, each animated directly.
+
+glTF has no visibility track, so parts that appear and disappear are animated through scale 0.
+Colour animations (recolour) are not exported; the colours are taken from the first frame.
 
 ## Running it
 
@@ -53,7 +65,8 @@ js/
   vanilla.js         vanilla player animation (HumanoidModel.setupAnim) and the per-frame driver
   load.js            input detection: files, links, base64 text, skins with embedded models
   export.js          "Export as project" (.cpmproject writer, PNG and ZIP encoders)
-  gltf.js            "Export GLB": bakes animation clips and writes glTF with three.js GLTFExporter
+  gltf.js            "Export GLB": bakes animation clips, builds the armature (or object
+                     hierarchy) and writes glTF with three.js GLTFExporter
   render.js          three.js scene, box meshes (BoxRender port), textures and transforms
   ui.js              page wiring and the frame loop
 assets/textures/     CPM template textures (skin data layout, default skins, cape, elytra, armor)
