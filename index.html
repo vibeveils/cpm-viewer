@@ -125,6 +125,14 @@
 				<button class="btn small" id="exportBtn" type="button">Export as project</button>
 				<span class="hint">Save the loaded model as an editable .cpmproject.</span>
 			</div>
+			<div class="export-row">
+				<button class="btn small" id="glbBtn" type="button">Export GLB</button>
+				<select id="glbMode" class="hud-select" aria-label="What to include in the GLB">
+					<option value="current">Current state, animated</option>
+					<option value="all">All movements, poses and gestures</option>
+					<option value="still">Current frame only</option>
+				</select>
+			</div>
 			<div id="exportMsg" hidden></div>
 		</section>
 	</aside>
@@ -133,6 +141,7 @@
 <!-- three.js r147 (last release that ships the non-module OrbitControls build) -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/exporters/GLTFExporter.js"></script>
 <!-- App scripts: plain scripts sharing one global scope, load order matters -->
 <script src="js/io.js"></script>
 <script src="js/assets.js"></script>
@@ -142,6 +151,7 @@
 <script src="js/vanilla.js"></script>
 <script src="js/load.js"></script>
 <script src="js/export.js"></script>
+<script src="js/gltf.js"></script>
 <script src="js/render.js"></script>
 <script src="js/ui.js"></script>
 </body>

@@ -297,6 +297,30 @@
 		m.hidden = false;
 		m.replaceChildren(el('div', { class: 'notice ' + (kind || '') }, text));
 	}
+	// Saves bytes as a download (claude.ai artifact: platform save dialog, which only accepts some extensions)
+	async function saveFile(filename, bytes, mime, detail) {
+		const dp = getDownloads();
+		const dl = dp ? await dp : null;
+		if (dl) {
+			const allowed = /\.(zip|json|txt|png)$/i.test(filename);
+			const name = allowed ? filename : filename + '.zip';
+			let data = bytes;
+			if (!allowed) data = await writeZip([{ name: filename, data: bytes }]);
+			try {
+				await dl.save({ filename: name, data: new Blob([data]) });
+				exportMsg('Saved ' + name + (allowed ? '' : ' (unzip it to get ' + filename + ')') + '.', 'ok');
+			} catch (e) { if (e && e.code !== 'declined') exportMsg('The download could not be saved here (' + (e.code || e.message) + ').', 'err'); else exportMsg(null); }
+		} else if (inSandbox && window.claude) {
+			exportMsg('Downloads are not available in this view.', 'err');
+		} else {
+			const a = document.createElement('a');
+			a.href = URL.createObjectURL(new Blob([bytes], { type: mime }));
+			a.download = filename;
+			document.body.append(a); a.click(); a.remove();
+			setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+			exportMsg('Exported ' + filename + (detail ? ' (' + detail + ')' : '') + '.', 'ok');
+		}
+	}
 	$('exportBtn').addEventListener('click', async () => {
 		if (!def) return;
 		const btn = $('exportBtn');
@@ -325,6 +349,28 @@
 		} catch (e) {
 			console.error(e);
 			exportMsg('Export failed: ' + (e.message || e), 'err');
+		} finally { btn.disabled = false; }
+	});
+
+	$('glbBtn').addEventListener('click', async () => {
+		if (!def) return;
+		const btn = $('glbBtn');
+		btn.disabled = true;
+		exportMsg('Building GLB…');
+		await new Promise(r => setTimeout(r, 30));
+		try {
+			const mode = $('glbMode').value;
+			let clips = [], opts = {};
+			const cur = gltfClipCurrent(vs, driver, 'Current');
+			if (mode === 'still') opts.rest = Object.assign(cur, { time: Math.floor(clock) });
+			else if (mode === 'current') clips = [cur];
+			else clips = gltfClipsAll(def);
+			const glb = await exportGLB(viewer, def, clips, opts);
+			const base = safeName((lastInfo.name || lastInfo.label || 'model').replace(/\s+/g, '_')) || 'model';
+			await saveFile(base + '.glb', glb, 'model/gltf-binary', clips.length ? clips.length + (clips.length === 1 ? ' animation' : ' animations') : 'no animation');
+		} catch (e) {
+			console.error(e);
+			exportMsg('GLB export failed: ' + (e.message || e), 'err');
 		} finally { btn.disabled = false; }
 	});
 

@@ -11,7 +11,11 @@ It reads:
 - model strings (base64) and Gist, GitHub, Pastebin or paste.tom5454.com links
 - skin PNGs with a model embedded in them (the linked data is downloaded automatically)
 
-Any loaded model can be saved back out with **Export as project**.
+Any loaded model can be saved back out with **Export as project**, or as a **GLB** (glTF binary)
+for Blender, game engines and other 3D tools. The GLB can hold the current frame, the current state
+as one looping clip, or one clip for every movement, pose, gesture, toggle and slider. Clips are
+baked at 20 frames per second from the same animation engine the viewer uses; parts that appear and
+disappear are animated through scale, since glTF has no visibility track.
 
 ## Running it
 
@@ -36,7 +40,8 @@ sharing as one file or opening straight from disk.
 ## Layout
 
 ```
-index.html           page markup; loads three.js from jsDelivr and the scripts below in order
+index.html           page markup; loads three.js (+ OrbitControls, GLTFExporter) from jsDelivr
+                     and the scripts below in order
 css/style.css        all styles (light and dark themes via CSS variables)
 js/
   io.js              binary reader (IOHelper port), PNG decoder, ZIP reader
@@ -48,6 +53,7 @@ js/
   vanilla.js         vanilla player animation (HumanoidModel.setupAnim) and the per-frame driver
   load.js            input detection: files, links, base64 text, skins with embedded models
   export.js          "Export as project" (.cpmproject writer, PNG and ZIP encoders)
+  gltf.js            "Export GLB": bakes animation clips and writes glTF with three.js GLTFExporter
   render.js          three.js scene, box meshes (BoxRender port), textures and transforms
   ui.js              page wiring and the frame loop
 assets/textures/     CPM template textures (skin data layout, default skins, cape, elytra, armor)

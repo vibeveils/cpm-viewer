@@ -321,6 +321,7 @@ class Viewer {
 	}
 	addRoot(root, vanilla) {
 		const node = new THREE.Group();
+		node.userData.cpmName = root.part.toLowerCase();
 		node.rotation.order = 'ZYX';
 		this.pxGroup.add(node);
 		const entry = { rc: root, node, vanillaMeshes: [], children: [] };
@@ -332,6 +333,7 @@ class Viewer {
 			const mk = (quads, layer) => {
 				const m = this.texMesh(quadsToGeometry(quads), sh, false);
 				m.userData.layer = layer;
+				m.userData.cpmName = part.toLowerCase() + '_' + layer;
 				node.add(m); entry.vanillaMeshes.push(m);
 			};
 			if (PLAYER_PART_VALUES[part]) {
@@ -349,6 +351,7 @@ class Viewer {
 	}
 	addCube(rc, parentNode, sheetName) {
 		const node = new THREE.Group();
+		node.userData.cpmName = (rc.cube && rc.cube.name) || 'cube';
 		node.rotation.order = 'ZYX';
 		parentNode.add(node);
 		const sh = this.sheet(sheetName);
